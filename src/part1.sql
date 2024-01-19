@@ -1,6 +1,8 @@
 CREATE TYPE check_state AS ENUM('0', '1', '2');
 CREATE TYPE in_or_out_state AS ENUM('1', '2');
 
+SET datestyle = 'dmy';
+
 CREATE TABLE peers (
 	nickname VARCHAR(255) PRIMARY KEY,
 	birthday DATE
