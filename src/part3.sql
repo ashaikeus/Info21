@@ -342,6 +342,44 @@ $$ LANGUAGE plpgsql;
 
 SELECT * FROM previous_tasks();
 
+---- ex13
+-- Найти «удачные» для проверок дни. День считается «удачным», если в нем есть хотя бы N идущих подряд успешных проверки
+-- Параметры процедуры: количество идущих подряд успешных проверок N. 
+-- Временем проверки считать время начала P2P этапа. 
+-- Под идущими подряд успешными проверками подразумеваются успешные проверки, между которыми нет неуспешных. 
+-- При этом кол-во опыта за каждую из этих проверок должно быть не меньше 80% от максимального. 
+-- Формат вывода: список дней.
+
+
+CREATE OR REPLACE FUNCTION lucky_days(checks_amount bigint)
+RETURNS TABLE("LuckyDays" Date) AS $$
+BEGIN
+	RETURN QUERY
+	WITH eighty_percent AS  (
+		SELECT * FROM xp
+		JOIN checks c ON c.id = xp.check_
+		JOIN tasks t ON t.title = c.task
+		WHERE xpamount * 100 / maxxp >= 80
+		),
+	is_passed AS  (
+	SELECT 	c.date, time, CASE WHEN ep.xpamount IS NULL THEN 0 ELSE 1 END AS status
+		FROM checks c
+		JOIN p2p ON p2p.check_ = c.id
+		FULL OUTER JOIN eighty_percent ep ON ep.check_ = c.id
+		ORDER BY c.date, p2p.time),
+	lucky_day AS(
+	SELECT date, time, status, CASE WHEN status = 1 THEN status + LAG(status) OVER (PARTITION BY date ORDER BY date, time) ELSE 0 END AS lucky_count
+	FROM is_passed)
+	SELECT DISTINCT date
+	FROM lucky_day
+	WHERE lucky_count >= checks_amount;
+END;
+$$ LANGUAGE plpgsql;
+
+
+SELECT * FROM lucky_days(1);
+
+
 --ex14
 
 CREATE OR REPLACE FUNCTION max_xp_peer()
