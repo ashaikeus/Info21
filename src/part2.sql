@@ -1,14 +1,3 @@
---   SELECT
---     *
---   FROM
---     p2p p
---     INNER JOIN checks c ON c.id = p.check_
---   WHERE
---     p.checkingpeer = 'iosfiypdje'
---     -- AND peer = 'wsiwgwornx'
---     -- AND task = taskName
---   ORDER BY
---     c.id DESC
 
 CREATE OR REPLACE PROCEDURE p2p_checked(
   IN checked VARCHAR,
@@ -177,3 +166,53 @@ CREATE OR REPLACE TRIGGER trigger_update_xp
 BEFORE INSERT ON XP
 FOR EACH ROW
 EXECUTE PROCEDURE fnc_update_xp();
+
+-- Вызовы для проверок
+-- 1)
+CALL p2p_checked('gdlzzcthpd', 'iosfiypdje', 'AP4', '1', '23:30:22');
+CALL p2p_checked('gdlzzcthpd', 'iosfiypdje', 'AP4', '0', '23:30:22');
+CALL p2p_checked('gdlzzcthpd', 'iosfiypdje', 'AP4', '2', '23:30:22');
+
+-- результат
+SELECT
+*
+FROM
+    p2p p
+INNER JOIN checks c ON c.id = p.check_
+WHERE
+    p.checkingpeer = 'iosfiypdje'
+    AND peer = 'gdlzzcthpd'
+ORDER BY
+    c.id DESC
+LIMIT 10
+
+-- 2)
+CALL verter_insert('gdlzzcthpd', 'AP4', '0', '00:30:22');
+
+-- результат
+SELECT
+*
+FROM
+    transferredpoints p
+WHERE
+    p.checkingpeer = 'gdlzzcthpd'
+ORDER BY
+    c.id DESC
+
+-- 3)
+-- вызовы из пункта 1
+-- результат
+SELECT
+*
+FROM
+    verter p
+WHERE
+    p.checkingpeer = 'gdlzzcthpd'
+ORDER BY
+    c.id DESC
+-- 4)
+INSERT INTO xp(id, check_, xpamount)
+            VALUES ((SELECT MAX(id) FROM xp) + 1, 3, 800);
+
+INSERT INTO xp(id, check_, xpamount)
+            VALUES ((SELECT MAX(id) FROM xp) + 1, 14, 800);
