@@ -125,7 +125,7 @@ $$
 CREATE OR REPLACE TRIGGER trigger_update_transferredpoints
 BEFORE INSERT ON P2P
 FOR EACH ROW
-EXECUTE PROCEDURE p2p_tranferred_points_change_trigger_fnc();
+EXECUTE PROCEDURE fnc_update_transferredpoints();
 
 
 CREATE OR REPLACE FUNCTION fnc_update_xp()
@@ -187,17 +187,18 @@ ORDER BY
 LIMIT 10
 
 -- 2)
-CALL verter_insert('gdlzzcthpd', 'AP4', '0', '00:30:22');
+CALL verter_check('gdlzzcthpd', 'AP4', '0', '00:30:22');
+CALL p2p_checked('gdlzzcthpd', 'iosfiypdje', 'AP4', '0', '23:30:22');
+CALL p2p_checked('gdlzzcthpd', 'iosfiypdje', 'AP4', '1', '23:30:22');
+CALL verter_check('gdlzzcthpd', 'AP4', '0', '00:30:22');
 
 -- результат
 SELECT
 *
 FROM
-    transferredpoints p
+    verter p
 WHERE
-    p.checkingpeer = 'gdlzzcthpd'
-ORDER BY
-    c.id DESC
+    p.id = (SELECT MAX(id) FROM verter)
 
 -- 3)
 -- вызовы из пункта 1
@@ -205,11 +206,10 @@ ORDER BY
 SELECT
 *
 FROM
-    verter p
+    transferredpoints p
 WHERE
-    p.checkingpeer = 'gdlzzcthpd'
-ORDER BY
-    c.id DESC
+    p.checkingpeer = 'iosfiypdje'
+	AND checkedpeer = 'gdlzzcthpd'
 -- 4)
 INSERT INTO xp(id, check_, xpamount)
             VALUES ((SELECT MAX(id) FROM xp) + 1, 3, 800);
